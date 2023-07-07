@@ -11,7 +11,7 @@ class QuizInterface:
     def __init__(self, quiz: QuizBrain):
 
         self.quiz = quiz
-
+        self.counter = 0
         self.window = Tk()
         self.window.title("Quizzler")
         self.window.geometry("340x516")
@@ -65,6 +65,7 @@ class QuizInterface:
         self.button.grid(row=6, column=0, columnspan=2, pady=30)
     
     def submit(self):
+        self.button.config(state="disabled")
         number = self.number_dropdown.get()
         difficulty = self.selected_difficulty.get()
         category = self.selected_category.get()
@@ -127,7 +128,7 @@ class QuizInterface:
     def new(self, quiz_brain: QuizBrain):
         self.window.config(padx=20, pady=20)
 
-        self.score_label = Label(text=f"Score: {self.quiz.score}", bg=THEME_COLOR, fg="white", font=("Arial", 15, "normal"))
+        self.score_label = Label(text=f"Score: {self.quiz.score} / {len(self.quiz.question_list)}", bg=THEME_COLOR, fg="white", font=("Arial", 15, "normal"))
         self.score_label.grid(row=0, column=1)
 
         self.canvas = Canvas(width=300, height=250, highlightthickness=0, bg="white")
@@ -151,13 +152,26 @@ class QuizInterface:
         self.false_button.grid(row=2, column=1)
     
     def get_next_question(self):
+        try:
+            self.true_button.config(state="active")
+            self.false_button.config(state="active")
+        except:
+            pass
         self.canvas.config(bg="white")
-        quiz_question_text = self.quiz.next_question()
-        self.canvas.itemconfig(self.question_text, text=quiz_question_text)
-        self.score_label.config(text=f"Score: {self.quiz.score}")
+        self.score_label.config(text=f"Score: {self.quiz.score} / {len(self.quiz.question_list)}")
+        if self.counter < len(self.quiz.question_list):
+            quiz_question_text = self.quiz.next_question()
+            self.canvas.itemconfig(self.question_text, text=quiz_question_text)
+        else:
+            self.canvas.itemconfig(self.question_text, text=f"Game Over\nYou scored: {self.quiz.score} / {len(self.quiz.question_list)}")
+            self.true_button.destroy()
+            self.false_button.destroy()
+            self.reset_button = Button(text="Reset", command=self.reset)
+            self.reset_button.config(width=20)
+            self.reset_button.grid(row=2, column=0, columnspan=2, pady=10)
+
     
     def right(self):
-        print("Hello")
         boolean_check = self.quiz.check_answer("True")
         self.feedback(boolean_check)
         
@@ -166,13 +180,22 @@ class QuizInterface:
         self.feedback(boolean_check)
         
     def feedback(self, boolean_type):
+        self.true_button.config(state="disabled")
+        self.false_button.config(state="disabled")
+        self.counter += 1
         if boolean_type:
             self.canvas.config(bg="green")
         else:
             self.canvas.config(bg="red")
         
+
         self.window.after(1000, self.get_next_question)
 
-
-quiz_brain = QuizBrain()
-quiz_interface = QuizInterface(quiz_brain)
+    def reset(self):
+        self.counter = 0
+        self.quiz.score = 0
+        self.quiz.question_number = 0
+        self.score_label.destroy()
+        self.canvas.destroy()
+        self.reset_button.destroy()
+        self.setup()

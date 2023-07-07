@@ -1,7 +1,7 @@
 from question_model import Question
 from data import question_data
 from quiz_brain import QuizBrain
-from ui import QuizInterface
+from test import QuizInterface
 
 question_bank = []
 for question in question_data:
@@ -11,7 +11,7 @@ for question in question_data:
     question_bank.append(new_question)
 
 
-quiz_brain = QuizBrain(question_bank)
+quiz_brain = QuizBrain()
 quiz_interface = QuizInterface(quiz_brain)
 
 

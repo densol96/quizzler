@@ -4,5 +4,3 @@ from test import QuizInterface
 
 quiz_brain = QuizBrain()
 quiz_interface = QuizInterface(quiz_brain)
-
-

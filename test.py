@@ -1,4 +1,5 @@
 from tkinter import *
+from tkinter import messagebox
 from quiz_brain import QuizBrain
 from question_model import Question
 import time
@@ -18,8 +19,6 @@ class QuizInterface:
         self.window.config(bg=THEME_COLOR)
         self.window.resizable(0, 0)
         self.setup()
-
-
         self.window.mainloop()
     
     def setup(self):
@@ -66,39 +65,57 @@ class QuizInterface:
     
     def submit(self):
         self.button.config(state="disabled")
+
         number = self.number_dropdown.get()
         difficulty = self.selected_difficulty.get()
         category = self.selected_category.get()
 
-        if category == "General":
-            category = 9
-        elif category == "Computers":
-            category = 18
-        elif category == "Politics":
-            category = 24
-        elif category == "Animals":
-            category = 27
-        elif category == "Math":
-            category = 19
-
-        parameters = {
-            "amount": number,
-            "category": category,
-            "difficulty": difficulty,
-            "type": "boolean"
-        }
-
-        self.quiz.question_list = self.api_request(parameters)
-        self.destroy_setup()
-        self.new(self.quiz)
+        if number == 0 or difficulty == "---choose---" or category == "---choose---":
+            messagebox.showwarning(title="Warning!", message="You have left some field empty!")
+            self.button.config(state="active")
+        else:
+            check = messagebox.askokcancel(title="Confirm the details", 
+                                           message="These are the details entered:\n"
+                                           f"Number of questions: {number}\n"
+                                           f"Difficulty: {difficulty}\n"
+                                            f"Category: {category}\n"
+                                            "\nAre the details correct?")
         
+            if check:
+                if category == "General":
+                    category = 9
+                elif category == "Computers":
+                    category = 18
+                elif category == "Politics":
+                    category = 24
+                elif category == "Animals":
+                    category = 27
+                elif category == "Math":
+                    category = 19
+
+                parameters = {
+                    "amount": number,
+                    "category": category,
+                    "difficulty": difficulty,
+                    "type": "boolean"
+                }
+
+                self.quiz.question_list = self.api_request(parameters)
+                self.destroy_setup()
+                print(self.quiz.question_list)
+                if len(self.quiz.question_list) == 0:
+                    self.quiz.question_list = self.api_request()
+                self.new(self.quiz)
+            else:
+                self.button.config(state="active")
+
     def api_request(self, parameters=None):
 
         api_endpoint = "https://opentdb.com/api.php"
         if parameters is not None:
             response = requests.get(url=api_endpoint, params=parameters)
         else:
-            response = requests.get(url=api_endpoint)
+            response = requests.get(url="https://opentdb.com/api.php?amount=10&type=boolean")
 
         response.raise_for_status()
         data = response.json()["results"]
@@ -192,6 +209,7 @@ class QuizInterface:
         self.window.after(1000, self.get_next_question)
 
     def reset(self):
+        self.reset_button.config(state="disabled")
         self.counter = 0
         self.quiz.score = 0
         self.quiz.question_number = 0
